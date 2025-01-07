@@ -9,10 +9,11 @@
 -- (a) a bacterial or fungal infectious process AND
 -- (b) a diagnosis of acute organ dysfunction (Appendix 2).
 
+
 WITH dx AS
 (
   SELECT hadm_id, icd_version, TRIM(icd_code) AS icd_code
-  FROM `physionet-data.mimic_hosp.diagnoses_icd`
+  FROM `physionet-data.mimiciv_3_1_hosp.diagnoses_icd`
 )
 , dx_icd9 AS
 (
@@ -82,7 +83,7 @@ dx_icd10 AS
 		MAX(CASE
 		WHEN TRIM(icd_code) IN ('9670', '9671', '9672') THEN 1
 		ELSE 0 END) AS mech_vent
-	FROM `physionet-data.mimic_hosp.procedures_icd`
+	FROM `physionet-data.mimiciv_3_1_hosp.procedures_icd`
     WHERE icd_version = 9
     GROUP BY hadm_id
 )
@@ -92,7 +93,7 @@ dx_icd10 AS
 		MAX(CASE
 		WHEN TRIM(icd_code) IN ('T423X1A', 'T423X2A', 'T423X3A', 'T423X4A', 'T426X1A') THEN 1
 		ELSE 0 END) AS mech_vent
-	FROM `physionet-data.mimic_hosp.procedures_icd`
+	FROM `physionet-data.mimiciv_3_1_hosp.procedures_icd`
     WHERE icd_version = 10
     GROUP BY hadm_id
 )
@@ -104,7 +105,7 @@ dx_icd10 AS
 		, GREATEST(COALESCE(dx_icd9.explicit_sepsis, 0), COALESCE(dx_icd10.explicit_sepsis, 0)) AS explicit_sepsis
 		, GREATEST(COALESCE(dx_icd9.organ_dysfunction, 0), COALESCE(dx_icd10.organ_dysfunction, 0)) AS organ_dysfunction
 		, GREATEST(COALESCE(proc_icd9.mech_vent, 0), COALESCE(proc_icd10.mech_vent, 0)) AS mech_vent
-	FROM `physionet-data.mimic_core.admissions` adm
+	FROM `physionet-data.mimiciv_3_1_hosp.admissions` adm
     LEFT JOIN dx_icd9
         ON adm.hadm_id = dx_icd9.hadm_id
     LEFT JOIN dx_icd10
